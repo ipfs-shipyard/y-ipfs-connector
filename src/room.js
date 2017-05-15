@@ -6,7 +6,10 @@ const Emitter = require('events')
 const PEER_POLL_INTERVAL = 1000
 
 module.exports = (ipfs, topic) => {
-  const emitter = new Emitter()
+  const emitter = Object.assign(new Emitter(), {
+    hasPeer: hasPeer
+  })
+
   let peers = []
   const pollInterval = setInterval(pollPeers, PEER_POLL_INTERVAL)
 
@@ -40,5 +43,9 @@ module.exports = (ipfs, topic) => {
     differences.removed.forEach((removedPeer) => emitter.emit('peerLeft', removedPeer))
 
     return differences.added.length > 0 || differences.removed.length > 0
+  }
+
+  function hasPeer (peer) {
+    return peers.indexOf(peer) >= 0
   }
 }

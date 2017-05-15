@@ -3,6 +3,8 @@
 
 const IPFS = require('IPFS')
 const pull = require('pull-stream')
+const Queue = require('async/queue')
+const setImmediate = require('async/setImmediate')
 const Room = require('./room')
 const Peers = require('./peers')
 const protocol = require('./protocol')
@@ -46,9 +48,9 @@ function extend (Y) {
 
       const onMessage = this.ipfsPubsubSubscription = (msg) => {
         const message = decode(msg.data)
-        console.log('message %s from %j', message, msg.from)
+        console.log('received broadcast message', message, msg.from)
         if (message.type) {
-          this.receiveMessage(msg.from, message)
+          this.queueReceiveMessage(msg.from, message)
         }
       }
 
@@ -65,7 +67,7 @@ function extend (Y) {
             conn,
             pull.map(decode),
             pull.map((message) => {
-              this.receiveMessage(peerId, message)
+              this.queueReceiveMessage(peerId, message)
               return message
             }),
 
@@ -76,6 +78,33 @@ function extend (Y) {
 
         })
       }
+
+      const processReceivedMessage = (m, _callback) => {
+        console.log('processReceivedMessage', m)
+        if (this._ipfsUserId && m.from === this._ipfsUserId) {
+          console.log('got message from self, ignoring...')
+          callback()
+        } else if (!this.room) {
+          console.log('no room, waiting...')
+          this.receiveQueue.unshift(m)
+          setTimeout(callback, 500) // wait for room
+        } else if (this.room.hasPeer(m.from)) {
+          console.log('room has peer, delivering')
+          this.receiveMessage(m.from, m.message)
+          callback()
+        } else {
+          console.log('waiting for peer %s to deliver message', m.from, m.message)
+          this.receiveQueue.push(m)
+          setTimeout(callback, 500)
+        }
+
+        function callback (err) {
+          console.log('processReceivedMessage DONE', err)
+          _callback(err)
+        }
+      }
+
+      this.receiveQueue = Queue(processReceivedMessage, 1)
 
       ipfs.once('ready', () => {
         console.log('ipfs ready')
@@ -88,6 +117,7 @@ function extend (Y) {
 
           console.log('ipfs id: %s', peerInfo.id)
 
+          this._ipfsUserId = peerInfo.id
           this.setUserId(peerInfo.id)
 
           // subscribe to broadcast messages
@@ -97,12 +127,12 @@ function extend (Y) {
           // handle direct messages
           ipfs._libp2pNode.handle(protocol.id, handleDirectConnection)
 
-          const room = Room(ipfs, topic)
+          const room = this.room = Room(ipfs, topic)
           this.peers = Peers(ipfs, topic)
 
           room.on('peerJoined', (peer) => {
             console.log('peer %s joined', peer)
-            this.userJoined(peer, 'master')
+            this.userJoined(peer, 'master ')
           })
 
           room.on('peerLeft', (peer) => {
@@ -131,7 +161,7 @@ function extend (Y) {
       this.peers.send(peer, message)
     }
     broadcast (message) {
-      console.log('broadcast %j', message)
+      console.log('broadcasting', message)
       this.ipfs.pubsub.publish(this.ipfsPubSubTopic, encode(message), (err) => {
         if (err) {
           throw err
@@ -140,6 +170,13 @@ function extend (Y) {
     }
     isDisconnected () {
       return !this.connected
+    }
+
+    queueReceiveMessage (from, message) {
+      this.receiveQueue.push({
+        from: from,
+        message: message
+      })
     }
   }
   Y.extend('ipfs', YIPFS)
