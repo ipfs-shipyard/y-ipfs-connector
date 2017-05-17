@@ -1,7 +1,6 @@
 /* global Y */
 'use strict'
 
-const IPFS = require('IPFS')
 const pull = require('pull-stream')
 const Queue = require('async/queue')
 const setImmediate = require('async/setImmediate')
@@ -20,31 +19,19 @@ function extend (Y) {
       if (options.room == null) {
         throw new Error('You must define a room name!')
       }
+      if (!options.ipfs) {
+        throw new Error('You must define a started IPFS object inside options')
+      }
       options.role = 'master'
       super(y, options)
 
-      this.connected = false
+      this.ipfs = options.ipfs
 
-      this.ipfsOptions = options.ipfs || {
-        ipfs: options.ipfs || {
-          repo: repoPath(),
-          config: {
-            Addresses: {
-              Swarm: [
-                '/libp2p-webrtc-star/dns4/star-signal.cloud.ipfs.team/wss'
-              ]
-            }
-          },
-          EXPERIMENTAL: {
-            pubsub: true
-          }
-        },
+      this.ipfsOptions = {
         room: options.room
       }
 
       const topic = this.ipfsPubSubTopic = 'y-ipfs:rooms:' + options.room
-
-      const ipfs = this.ipfs = new IPFS(this.ipfsOptions.ipfs)
 
       const onMessage = this.ipfsPubsubSubscription = (msg) => {
         const message = decode(msg.data)
@@ -106,42 +93,37 @@ function extend (Y) {
 
       this.receiveQueue = Queue(processReceivedMessage, 1)
 
-      ipfs.once('ready', () => {
-        console.log('ipfs ready')
-        this.connected = true
-        ipfs.id((err, peerInfo) => {
-          if (err) {
-            this.emit('error', err)
-            return // early
-          }
+      this.ipfs.id((err, peerInfo) => {
+        if (err) {
+          this.emit('error', err)
+          return // early
+        }
 
-          console.log('ipfs id: %s', peerInfo.id)
+        console.log('ipfs id: %s', peerInfo.id)
 
-          this._ipfsUserId = peerInfo.id
-          this.setUserId(peerInfo.id)
+        this._ipfsUserId = peerInfo.id
+        this.setUserId(peerInfo.id)
 
-          // subscribe to broadcast messages
-          ipfs.pubsub.subscribe(topic, onMessage)
-          console.log('subscribed to topic %s', topic)
+        // subscribe to broadcast messages
+        this.ipfs.pubsub.subscribe(topic, onMessage)
+        console.log('subscribed to topic %s', topic)
 
-          // handle direct messages
-          ipfs._libp2pNode.handle(protocol.id, handleDirectConnection)
+        // handle direct messages
+        this.ipfs._libp2pNode.handle(protocol.id, handleDirectConnection)
 
-          const room = this.room = Room(ipfs, topic)
-          this.peers = Peers(ipfs, topic)
+        const room = this.room = Room(this.ipfs, topic)
+        this.peers = Peers(this.ipfs, topic)
 
-          room.on('peerJoined', (peer) => {
-            console.log('peer %s joined', peer)
-            this.userJoined(peer, 'master ')
-          })
+        room.on('peerJoined', (peer) => {
+          console.log('peer %s joined', peer)
+          this.userJoined(peer, 'master ')
+        })
 
-          room.on('peerLeft', (peer) => {
-            console.log('peer %s left', peer)
-            this.userLeft(peer)
-          })
+        room.on('peerLeft', (peer) => {
+          console.log('peer %s left', peer)
+          this.userLeft(peer)
         })
       })
-
     }
     disconnect () {
       console.log('disconnect')
@@ -169,7 +151,7 @@ function extend (Y) {
       })
     }
     isDisconnected () {
-      return !this.connected
+      return false
     }
 
     queueReceiveMessage (from, message) {
@@ -180,11 +162,6 @@ function extend (Y) {
     }
   }
   Y.extend('ipfs', YIPFS)
-
-  function repoPath () {
-    // TODO: shouldnt need a new repo on every instance
-    return 'temp/ipfs-y/' + Math.random()
-  }
 }
 
 module.exports = extend
