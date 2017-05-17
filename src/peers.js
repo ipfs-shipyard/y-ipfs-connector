@@ -1,5 +1,6 @@
 'use strict'
 
+const log = require('debug')('y-ipfs')
 const Emitter = require('events')
 const pull = require('pull-stream')
 const Pushable = require('pull-pushable')
@@ -27,7 +28,7 @@ module.exports = (ipfs, topic) => {
       if (!conn) {
         later(peer, message)
       } else {
-        console.log('connected. sending message', message, peer)
+        log('connected. sending message', message, peer)
         conn.push(encode(message))
       }
     })
@@ -63,14 +64,14 @@ module.exports = (ipfs, topic) => {
               callback(err)
               return // early
             }
-            console.log('connected to %s', peer)
+            log('connected to %s', peer)
             const pushable = Pushable()
             connections[peer] = pushable
             pull(
               pushable,
               conn,
               pull.onEnd((err) => {
-                console.log('connection to %s ended', peer, err)
+                log('connection to %s ended', peer, err)
                 delete connections[peer]
               })
             )
