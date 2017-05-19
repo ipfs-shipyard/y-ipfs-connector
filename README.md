@@ -14,8 +14,17 @@ $ npm install y-ipfs-connector --save
 ## Example
 
 ```js
+// you need to create and inject a IPFS object
 const IPFS = require('ipfs')
+
 const Y = require('yjs')
+require('y-ipfs-connector')(Y)
+
+// other Yjs deps:
+require('y-memory')(Y)
+require('y-array')(Y)
+require('y-text')(Y)
+
 
 // create IPFS node
 const ipfs = new IPFS({
@@ -37,7 +46,7 @@ Y({
   },
   connector: {
     name: 'ipfs', // use the IPFS connector
-    ipfs: ipfs,
+    ipfs: ipfs, // inject the IPFS object
     room: 'Textarea-example-dev'
   },
   sourceDir: '/bower_components', // location of the y-* modules
