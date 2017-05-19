@@ -1,21 +1,18 @@
 {
-  "name": "y-ipfs",
-  "version": "0.1.0",
-  "description": "Y.js over IPFS",
+  "name": "y-ipfs-connector",
+  "version": "1.0.0",
+  "description": "Y.js connector over IPFS",
   "main": "src/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pgte/y-ipfs.git"
+    "url": "git+https://github.com/pgte/y-ipfs-connector.git"
   },
   "author": "Pedro Teixeira <i@pgte.me",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pgte/y-ipfs/issues"
+    "url": "https://github.com/pgte/y-ipfs-connector/issues"
   },
-  "homepage": "https://github.com/pgte/y-ipfs#readme",
+  "homepage": "https://github.com/pgte/y-ipfs-connector#readme",
   "dependencies": {
     "async": "^2.4.0",
     "debug": "^2.6.7",

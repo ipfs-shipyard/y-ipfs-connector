@@ -1,4 +1,4 @@
-# y-ipfs
+# y-ipfs-connector
 
 > IPFS Connector for [Yjs](https://github.com/y-js/yjs)
 
