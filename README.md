@@ -7,7 +7,7 @@
 Retrieve this with npm:
 
 ```bash
-$ npm install y-ipfs --save
+$ npm install y-ipfs-connector --save
 ```
 
 
@@ -51,7 +51,7 @@ Y({
 ```
 ## Debug
 
-Activate `y-ipfs` on [`debug`](https://github.com/visionmedia/debug#readme) to see log messages.
+Activate `y-ipfs-connector` on [`debug`](https://github.com/visionmedia/debug#readme) to see log messages.
 
 # License
 

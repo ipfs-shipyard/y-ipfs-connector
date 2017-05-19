@@ -1,6 +1,6 @@
 'use strict'
 
-const log = require('debug')('y-ipfs')
+const log = require('debug')('y-ipfs-connector')
 const Emitter = require('events')
 const pull = require('pull-stream')
 const Pushable = require('pull-pushable')

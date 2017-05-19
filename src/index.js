@@ -1,7 +1,7 @@
 /* global Y */
 'use strict'
 
-const log = require('debug')('y-ipfs')
+const log = require('debug')('y-ipfs-connector')
 const pull = require('pull-stream')
 const Queue = require('async/queue')
 const EventEmitter = require('events')
