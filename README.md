@@ -33,6 +33,11 @@ const ipfs = new IPFS({
       Swarm: [
         '/libp2p-webrtc-star/dns4/star-signal.cloud.ipfs.team/wss'
       ]
+    },
+    Discovery: {
+      webRTCStar: {
+        Enabled: true // need this to work
+      }
     }
   },
   EXPERIMENTAL: {
