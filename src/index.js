@@ -4,6 +4,7 @@
 const log = require('debug')('y-ipfs-connector')
 const EventEmitter = require('events')
 const Room = require('ipfs-pubsub-room')
+const Queue = require('async/queue')
 const encode = require('./encode')
 const decode = require('./decode')
 
@@ -32,12 +33,13 @@ function extend (Y) {
       this.roomEmitter.peers = () => this._room.getPeers()
       this.roomEmitter.id = () => topic
 
+      this._receiveQueue = Queue(this._processQueue.bind(this), 1)
+
       this._room = Room(this.ipfs, topic)
 
       this._room.on('message', (msg) => {
         const message = decode(msg.data)
-        console.log('got message from ' + msg.from + ': ', message)
-        this.receiveMessage(msg.from, )
+        this._queueReceiveMessage(msg.from, message)
       })
 
       this._room.on('peer joined', (peer) => {
@@ -59,6 +61,29 @@ function extend (Y) {
       }
     }
 
+    _queueReceiveMessage (from, message) {
+      this._receiveQueue.push({
+        from: from,
+        message: message
+      })
+    }
+
+    _processQueue (item, callback) {
+      const from = item.from
+      const message = item.message
+
+      if (this._room.hasPeer(from)) {
+        if (from !== this._ipfsUserId) {
+          console.log('got message from ' + from + ': ', message)
+          this.receiveMessage(from, message)
+        }
+        callback()
+      } else {
+        this._receiveQueue.unshift(item)
+        setTimeout(callback, 500)
+      }
+    }
+
     _start () {
       console.log('starting...')
       const id = this.ipfs._peerInfo.id
@@ -76,7 +101,7 @@ function extend (Y) {
       this._room.sendTo(peer, encode(message))
     }
     broadcast (message) {
-      log('broadcasting', message)
+      console.log('broadcasting', message)
       this._room.broadcast(encode(message))
     }
     isDisconnected () {
