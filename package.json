@@ -14,11 +14,7 @@
   },
   "homepage": "https://github.com/pgte/y-ipfs-connector#readme",
   "dependencies": {
-    "async": "^2.4.0",
     "debug": "^2.6.7",
-    "hyperdiff": "^2.0.2",
-    "multiaddr": "^2.3.0",
-    "pull-pushable": "^2.1.0",
-    "pull-stream": "^3.6.0"
+    "ipfs-pubsub-room": "^0.1.1"
   }
 }
