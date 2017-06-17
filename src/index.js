@@ -27,8 +27,6 @@ function extend (Y) {
 
       const topic = this.ipfsPubSubTopic = 'y-ipfs:rooms:' + options.room
 
-      console.log('topic:', topic)
-
       this.roomEmitter = options.roomEmitter || new EventEmitter()
       this.roomEmitter.peers = () => this._room.getPeers()
       this.roomEmitter.id = () => topic
@@ -39,17 +37,17 @@ function extend (Y) {
 
       this._room.on('message', (msg) => {
         const message = decode(msg.data)
-        this._queueReceiveMessage(msg.from, message)
+        if (message.type !== null) {
+          this._queueReceiveMessage(msg.from, message)
+        }
       })
 
       this._room.on('peer joined', (peer) => {
-        console.log('peer joined', peer)
         this.roomEmitter.emit('peer joined', peer)
-        this.userJoined(peer, 'master ')
+        this.userJoined(peer, 'master')
       })
 
       this._room.on('peer left', (peer) => {
-        console.log('peer left', peer)
         this.roomEmitter.emit('peer left', peer)
         this.userLeft(peer)
       })
@@ -72,11 +70,11 @@ function extend (Y) {
       const from = item.from
       const message = item.message
 
-      if (this._room.hasPeer(from)) {
-        if (from !== this._ipfsUserId) {
-          console.log('got message from ' + from + ': ', message)
-          this.receiveMessage(from, message)
-        }
+      if (from === this._ipfsUserId) {
+        // ignore message from self
+        callback()
+      } else if (this._room.hasPeer(from)) {
+        this.receiveMessage(from, message)
         callback()
       } else {
         this._receiveQueue.unshift(item)
@@ -85,8 +83,7 @@ function extend (Y) {
     }
 
     _start () {
-      console.log('starting...')
-      const id = this.ipfs._peerInfo.id
+      const id = this.ipfs._peerInfo.id.toB58String()
       this._ipfsUserId = id
       this.setUserId(id)
     }
@@ -97,11 +94,9 @@ function extend (Y) {
       super.disconnect()
     }
     send (peer, message) {
-      console.log('send', peer, message)
       this._room.sendTo(peer, encode(message))
     }
     broadcast (message) {
-      console.log('broadcasting', message)
       this._room.broadcast(encode(message))
     }
     isDisconnected () {
