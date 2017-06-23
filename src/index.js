@@ -35,6 +35,10 @@ function extend (Y) {
 
       this._room = Room(this.ipfs, topic)
 
+      this._room.on('error', (err) => {
+        (console.error || console.log)(err)
+      })
+
       this._room.on('message', (msg) => {
         const message = decode(msg.data)
         if (message.type !== null) {
