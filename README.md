@@ -2,6 +2,8 @@
 
 > IPFS Connector for [Yjs](https://github.com/y-js/yjs)
 
+([Demo video](https://t.co/jywinq2WlK))
+
 ## Use it!
 
 Retrieve this with npm:
