@@ -28,18 +28,6 @@ require('y-text')(Y)
 
 // create IPFS node
 const ipfs = new IPFS({
-  config: {
-    Addresses: {
-      Swarm: [
-        '/libp2p-webrtc-star/dns4/star-signal.cloud.ipfs.team/wss'
-      ]
-    },
-    Discovery: {
-      webRTCStar: {
-        Enabled: true // need this to work
-      }
-    }
-  },
   EXPERIMENTAL: {
     pubsub: true // need this to work
   }
