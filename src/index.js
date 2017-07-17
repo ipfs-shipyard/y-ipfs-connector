@@ -59,7 +59,6 @@ function extend (Y) {
               return
             }
             options.verifySignature.call(null, incomingMessage, sig, (err, valid) => {
-              console.log('verified signature', err, valid)
               if (err) {
                 console.error('Error verifying signature from peer ' + msg.from + '. Discarding message.', err)
                 return
