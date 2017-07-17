@@ -5,6 +5,7 @@ const log = require('debug')('y-ipfs-connector')
 const EventEmitter = require('events')
 const Room = require('ipfs-pubsub-room')
 const Queue = require('async/queue')
+const Buffer = require('safe-buffer').Buffer
 const encode = require('./encode')
 const decode = require('./decode')
 
@@ -20,8 +21,12 @@ function extend (Y) {
       if (!options.ipfs) {
         throw new Error('You must define a started IPFS object inside options')
       }
-      options.role = 'master'
+
+
+      if (!options.role) { options.role = 'master' }
       super(y, options)
+
+      this._yConnectorOptions = options
 
       this.ipfs = options.ipfs
 
@@ -40,9 +45,35 @@ function extend (Y) {
       })
 
       this._room.on('message', (msg) => {
+        const proceed = () => {
+          this._queueReceiveMessage(msg.from, decode(message.payload))
+        }
+
         const message = decode(msg.data)
         if (message.type !== null) {
-          this._queueReceiveMessage(msg.from, message)
+          if (options.verifySignature) {
+            const sig = message.signature && Buffer.from(message.signature, 'base64')
+            const incomingMessage = Buffer.from(message.payload)
+            if (!sig) {
+              console.error('No signature in message from ' + msg.from + '. Discarding it.')
+              return
+            }
+            options.verifySignature.call(null, incomingMessage, sig, (err, valid) => {
+              console.log('verified signature', err, valid)
+              if (err) {
+                console.error('Error verifying signature from peer ' + msg.from + '. Discarding message.', err)
+                return
+              }
+
+              if (!valid) {
+                console.error('Invalid signature from peer ' + msg.from + '. Discarding message.')
+                return
+              }
+              proceed()
+            })
+          } else {
+            proceed()
+          }
         }
       })
 
@@ -98,13 +129,41 @@ function extend (Y) {
       super.disconnect()
     }
     send (peer, message) {
-      this._room.sendTo(peer, encode(message))
+      this._encodeMessage(message, (err, encodedMessage) => {
+        if (err) {
+          throw err
+        }
+        this._room.sendTo(peer, encodedMessage)
+      })
     }
     broadcast (message) {
-      this._room.broadcast(encode(message))
+      this._encodeMessage(message, (err, encodedMessage) => {
+        if (err) {
+          throw err
+        }
+        this._room.broadcast(encodedMessage)
+      })
     }
     isDisconnected () {
       return false
+    }
+
+    _encodeMessage (_message, callback) {
+      const message = localEncode(_message)
+      if (this._yConnectorOptions.sign) {
+        this._yConnectorOptions.sign(Buffer.from(message), (err, signature) => {
+          if (err) { return callback(err) }
+          const sig = signature.toString('base64')
+          callback(null, encode({
+            signature: sig,
+            payload: message
+          }))
+        })
+      } else {
+        callback(null, encode({
+          payload: message
+        }))
+      }
     }
   }
   Y.extend('ipfs', YIpfsConnector)
@@ -115,3 +174,6 @@ if (typeof Y !== 'undefined') {
   extend(Y)
 }
 
+function localEncode (m) {
+  return JSON.stringify(m)
+}
