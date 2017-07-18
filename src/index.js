@@ -40,7 +40,7 @@ function extend (Y) {
       this._room = Room(this.ipfs, topic)
 
       this._room.on('error', (err) => {
-        (console.error || console.log)(err)
+        console.error(err)
       })
 
       this._room.on('message', (msg) => {
@@ -54,12 +54,9 @@ function extend (Y) {
 
         if (options.verifySignature) {
           const sig = message.signature && Buffer.from(message.signature, 'base64')
-          if (!sig) {
-            console.error('No signature in message from ' + msg.from + '. Discarding it.')
-            return
-          }
           options.verifySignature.call(
             null,
+            msg.from,
             Buffer.from(message.payload),
             sig,
             (err, valid) => {

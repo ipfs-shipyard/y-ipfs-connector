@@ -81,7 +81,7 @@ You can also verify a signature for a given message by providing a function like
 Y({
   connector: {
     name: 'ipfs',
-    verifySignature: (message, signature, callback) => { ... }
+    verifySignature: (peer, message, signature, callback) => { ... }
     // ...
   }
   // ...
