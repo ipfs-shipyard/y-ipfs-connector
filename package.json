@@ -1,6 +1,6 @@
 {
   "name": "y-ipfs-connector",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Y.js connector over IPFS",
   "main": "src/index.js",
   "repository": {

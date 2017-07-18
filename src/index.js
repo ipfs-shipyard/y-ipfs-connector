@@ -5,6 +5,7 @@ const log = require('debug')('y-ipfs-connector')
 const EventEmitter = require('events')
 const Room = require('ipfs-pubsub-room')
 const Queue = require('async/queue')
+const setImmediate = require('async/setImmediate')
 const Buffer = require('safe-buffer').Buffer
 const encode = require('./encode')
 const decode = require('./decode')
@@ -38,46 +39,61 @@ function extend (Y) {
       this._receiveQueue = Queue(this._processQueue.bind(this), 1)
 
       this._room = Room(this.ipfs, topic)
+      this._room.setMaxListeners(Infinity)
 
       this._room.on('error', (err) => {
         console.error(err)
       })
 
       this._room.on('message', (msg) => {
-        const message = decode(msg.data)
+        const processMessage = () => {
+          const message = decode(msg.data)
 
-        const proceed = () => {
-          const yMessage = decode(message.payload)
-          if (yMessage.type === null) { return }
-          this._queueReceiveMessage(msg.from, yMessage)
+          const proceed = () => {
+            const yMessage = decode(message.payload)
+            if (yMessage.type === null) { return }
+            this._queueReceiveMessage(msg.from, yMessage)
+          }
+
+          if (options.verifySignature) {
+            const sig = message.signature && Buffer.from(message.signature, 'base64')
+            options.verifySignature.call(
+              null,
+              msg.from,
+              Buffer.from(message.payload),
+              sig,
+              (err, valid) => {
+                if (err) {
+                  console.error(
+                    'Error verifying signature from peer ' + msg.from +
+                    '. Discarding message.', err)
+                  return
+                }
+
+                if (!valid) {
+                  console.error(
+                    'Invalid signature from peer ' + msg.from +
+                    '. Discarding message.')
+                  return
+                }
+                proceed()
+              }
+            )
+          } else {
+            proceed()
+          }
         }
 
-        if (options.verifySignature) {
-          const sig = message.signature && Buffer.from(message.signature, 'base64')
-          options.verifySignature.call(
-            null,
-            msg.from,
-            Buffer.from(message.payload),
-            sig,
-            (err, valid) => {
-              if (err) {
-                console.error(
-                  'Error verifying signature from peer ' + msg.from +
-                  '. Discarding message.', err)
-                return
-              }
-
-              if (!valid) {
-                console.error(
-                  'Invalid signature from peer ' + msg.from +
-                  '. Discarding message.')
-                return
-              }
-              proceed()
+        if (!this._room.hasPeer(msg.from)) {
+          const joinedListener = (peer) => {
+            if (peer === msg.from) {
+              this._room.removeListener('peer joined', joinedListener)
+              processMessage()
             }
-          )
+          }
+          this._room.on('peer joined', joinedListener)
         } else {
-          proceed()
+          processMessage()
         }
       })
 
