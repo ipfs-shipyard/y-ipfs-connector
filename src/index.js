@@ -22,7 +22,6 @@ function extend (Y) {
         throw new Error('You must define a started IPFS object inside options')
       }
 
-
       if (!options.role) { options.role = 'master' }
       super(y, options)
 
@@ -45,34 +44,43 @@ function extend (Y) {
       })
 
       this._room.on('message', (msg) => {
+        const message = decode(msg.data)
+
         const proceed = () => {
-          this._queueReceiveMessage(msg.from, decode(message.payload))
+          const yMessage = decode(message.payload)
+          if (yMessage.type === null) { return }
+          this._queueReceiveMessage(msg.from, yMessage)
         }
 
-        const message = decode(msg.data)
-        if (message.type !== null) {
-          if (options.verifySignature) {
-            const sig = message.signature && Buffer.from(message.signature, 'base64')
-            const incomingMessage = Buffer.from(message.payload)
-            if (!sig) {
-              console.error('No signature in message from ' + msg.from + '. Discarding it.')
-              return
-            }
-            options.verifySignature.call(null, incomingMessage, sig, (err, valid) => {
+        if (options.verifySignature) {
+          const sig = message.signature && Buffer.from(message.signature, 'base64')
+          if (!sig) {
+            console.error('No signature in message from ' + msg.from + '. Discarding it.')
+            return
+          }
+          options.verifySignature.call(
+            null,
+            Buffer.from(message.payload),
+            sig,
+            (err, valid) => {
               if (err) {
-                console.error('Error verifying signature from peer ' + msg.from + '. Discarding message.', err)
+                console.error(
+                  'Error verifying signature from peer ' + msg.from +
+                  '. Discarding message.', err)
                 return
               }
 
               if (!valid) {
-                console.error('Invalid signature from peer ' + msg.from + '. Discarding message.')
+                console.error(
+                  'Invalid signature from peer ' + msg.from +
+                  '. Discarding message.')
                 return
               }
               proceed()
-            })
-          } else {
-            proceed()
-          }
+            }
+          )
+        } else {
+          proceed()
         }
       })
 

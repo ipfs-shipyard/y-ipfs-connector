@@ -1,3 +1,3 @@
 'use strict'
 
-module.exports = (message) => new Buffer(JSON.stringify(message))
+module.exports = (message) => Buffer.from(JSON.stringify(message))
