@@ -14,10 +14,10 @@
   },
   "homepage": "https://github.com/pgte/y-ipfs-connector#readme",
   "dependencies": {
-    "async": "^2.4.1",
-    "debug": "^2.6.7",
-    "ipfs-pubsub-room": "^0.1.4",
-    "libp2p-crypto": "^0.8.8",
+    "async": "^2.5.0",
+    "debug": "^3.0.1",
+    "ipfs-pubsub-room": "^0.1.5",
+    "libp2p-crypto": "^0.9.4",
     "safe-buffer": "^5.1.1"
   }
 }
