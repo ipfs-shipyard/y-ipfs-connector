@@ -47,7 +47,12 @@ function extend (Y) {
 
       this._room.on('message', (msg) => {
         const processMessage = () => {
-          const message = decode(msg.data)
+          let message
+          if (this._yConnectorOptions.decode) {
+            message = this._yConnectorOptions.decode(msg.data)
+          } else {
+            message = decode(msg.data)
+          }
 
           const proceed = () => {
             const yMessage = decode(message.payload)
@@ -153,6 +158,9 @@ function extend (Y) {
         if (err) {
           throw err
         }
+        if (this._yConnectorOptions.encode) {
+          encodedMessage = this._yConnectorOptions.encode(encodedMessage)
+        }
         this._room.sendTo(peer, encodedMessage)
       })
     }
@@ -160,6 +168,9 @@ function extend (Y) {
       this._encodeMessage(message, (err, encodedMessage) => {
         if (err) {
           throw err
+        }
+        if (this._yConnectorOptions.encode) {
+          encodedMessage = this._yConnectorOptions.encode(encodedMessage)
         }
         this._room.broadcast(encodedMessage)
       })

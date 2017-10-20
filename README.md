@@ -88,6 +88,26 @@ Y({
 })
 ```
 
+## `options.encode`
+
+Optional function that receives the message and encodes it. Useful if you want to encrypt the content before sending.
+
+```js
+options.encode = (message) => {
+  return encrypt(message)
+}
+```
+
+## `options.decode`
+
+Optional function that receives the message and decodes it. Useful if you want to decrypt the content after receiving.
+
+```js
+options.decode = (message) => {
+  return decrypt(message)
+}
+```
+
 ## Debug
 
 Activate `y-ipfs-connector` on [`debug`](https://github.com/visionmedia/debug#readme) to see log messages.
