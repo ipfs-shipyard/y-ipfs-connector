@@ -46,6 +46,10 @@ function extend (Y) {
       })
 
       this._room.on('message', (msg) => {
+        if (this.ipfs._peerInfo && msg.from === this.ipfs._peerInfo.id.toB58String()) {
+          return
+        }
+
         const processMessage = () => {
           let message
           if (this._yConnectorOptions.decode) {
