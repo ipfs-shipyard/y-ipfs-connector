@@ -60,6 +60,7 @@ function extend (Y) {
 
           const proceed = () => {
             const yMessage = decode(message.payload)
+            this.roomEmitter.emit('received message', msg.from, yMessage)
             if (yMessage.type === null) { return }
             this._queueReceiveMessage(msg.from, yMessage)
           }
@@ -166,6 +167,7 @@ function extend (Y) {
           encodedMessage = this._yConnectorOptions.encode(encodedMessage)
         }
         this._room.sendTo(peer, encodedMessage)
+        this.roomEmitter.emit('sent message', peer, message)
       })
     }
     broadcast (message) {
