@@ -179,6 +179,7 @@ function extend (Y) {
           encodedMessage = this._yConnectorOptions.encode(encodedMessage)
         }
         this._room.broadcast(encodedMessage)
+        this.roomEmitter.emit('sent message', 'broadcast', message)
       })
     }
     isDisconnected () {
