@@ -5,7 +5,6 @@ const log = require('debug')('y-ipfs-connector')
 const EventEmitter = require('events')
 const Room = require('ipfs-pubsub-room')
 const Queue = require('async/queue')
-const setImmediate = require('async/setImmediate')
 const Buffer = require('safe-buffer').Buffer
 const encode = require('./encode')
 const decode = require('./decode')
