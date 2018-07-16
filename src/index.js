@@ -23,6 +23,7 @@ function extend (Y) {
       }
 
       if (!options.role) { options.role = 'master' }
+
       super(y, options)
 
       this._yConnectorOptions = options
@@ -60,7 +61,11 @@ function extend (Y) {
           const proceed = () => {
             const yMessage = decode(message.payload)
             this.roomEmitter.emit('received message', msg.from, yMessage)
-            if (yMessage.type === null) { return }
+
+            if (yMessage.type === null) {
+              return
+            }
+
             this._queueReceiveMessage(msg.from, yMessage)
           }
 
@@ -189,8 +194,12 @@ function extend (Y) {
       const message = localEncode(_message)
       if (this._yConnectorOptions.sign) {
         this._yConnectorOptions.sign(Buffer.from(message), (err, signature) => {
-          if (err) { return callback(err) }
+          if (err) {
+            return callback(err)
+          }
+
           const sig = signature.toString('base64')
+
           callback(null, encode({
             signature: sig,
             payload: message
