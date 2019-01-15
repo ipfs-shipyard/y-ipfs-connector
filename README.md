@@ -1,5 +1,7 @@
 # y-ipfs-connector
 
+# NOT BEING ACTIVELY MAINTAINED
+
 > IPFS Connector for [Yjs](https://github.com/y-js/yjs)
 
 ([Demo video](https://t.co/jywinq2WlK))
