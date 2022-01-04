@@ -38,7 +38,7 @@ function extend (Y) {
 
       this._receiveQueue = Queue(this._processQueue.bind(this), 1)
 
-      this._room = Room(this.ipfs, topic)
+      this._room = new Room(this.ipfs, topic)
       this._room.setMaxListeners(Infinity)
 
       this._room.on('error', (err) => {
