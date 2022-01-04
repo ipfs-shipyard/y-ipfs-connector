@@ -24,6 +24,7 @@
     "libp2p-crypto": "~0.21.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.16.7",
     "aegir": "^36.1.1"
   }
 }
