@@ -18,12 +18,14 @@
   },
   "homepage": "https://github.com/pgte/y-ipfs-connector#readme",
   "dependencies": {
-    "async": "^2.6.1",
-    "debug": "^3.1.0",
-    "ipfs-pubsub-room": "^1.4.0",
-    "libp2p-crypto": "~0.13.0"
+    "async": "^3.2.2",
+    "debug": "^4.3.3",
+    "ipfs-pubsub-room": "^2.0.1",
+    "libp2p-crypto": "~0.21.0",
+    "safe-buffer": "^5.2.1"
   },
   "devDependencies": {
-    "aegir": "^15.0.0"
+    "@babel/core": "^7.16.7",
+    "aegir": "^36.1.1"
   }
 }

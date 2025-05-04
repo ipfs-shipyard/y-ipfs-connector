@@ -38,7 +38,7 @@ function extend (Y) {
 
       this._receiveQueue = Queue(this._processQueue.bind(this), 1)
 
-      this._room = Room(this.ipfs, topic)
+      this._room = new Room(this.ipfs, topic)
       this._room.setMaxListeners(Infinity)
 
       this._room.on('error', (err) => {
@@ -46,7 +46,8 @@ function extend (Y) {
       })
 
       this._room.on('message', (msg) => {
-        if (this.ipfs._peerInfo && msg.from === this.ipfs._peerInfo.id.toB58String()) {
+        const myPeerInfo = this._ipfsUserId;
+        if (myPeerInfo && msg.from === myPeerInfo.id) {
           return
         }
 
@@ -151,8 +152,9 @@ function extend (Y) {
       }
     }
 
-    _start () {
-      const id = this.ipfs._peerInfo.id.toB58String()
+    async _start () {
+      const myPeerInfo = await this.ipfs.id();
+      const id = myPeerInfo.id
       this._ipfsUserId = id
       this.setUserId(id)
     }
